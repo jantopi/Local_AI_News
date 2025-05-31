@@ -1,4 +1,3 @@
-```python
 import feedparser
 
 def fetch_news_from_rss(rss_feed_urls: list[str]) -> list[dict]:

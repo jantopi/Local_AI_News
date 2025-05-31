@@ -1,4 +1,3 @@
-```python
 import pytest
 from news_fetcher.fetcher import fetch_news_from_rss
 from unittest.mock import patch, MagicMock

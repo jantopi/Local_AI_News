@@ -1,0 +1,5 @@
+ollama
+feedparser
+requests
+streamlit
+pytest

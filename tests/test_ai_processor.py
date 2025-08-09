@@ -1,7 +1,7 @@
 import pytest
 import requests
 from unittest.mock import patch, MagicMock
-from ai_processor.processor import summarize_text, OLLAMA_API_URL, DEFAULT_MODEL
+from ai_processor.processor import summarize_text, get_available_models, OLLAMA_API_GENERATE_URL, DEFAULT_MODEL
 
 MOCK_OLLAMA_SUCCESS_RESPONSE = {
     "model": DEFAULT_MODEL,
@@ -37,9 +37,11 @@ def test_summarize_text_success(mock_post):
     assert summary == "This is a mock AI summary."
     mock_post.assert_called_once()
     args, kwargs = mock_post.call_args
-    assert args[0] == OLLAMA_API_URL
-    assert kwargs['json']['model'] == DEFAULT_MODEL
-    assert "Summarize the following news article" in kwargs['json']['prompt']
+    assert args[0] == OLLAMA_API_GENERATE_URL
+    import json
+    sent_data = json.loads(kwargs['data'])
+    assert sent_data['model'] == DEFAULT_MODEL
+    assert "This is a sample news article to be summarized." in sent_data['prompt']
 
 @patch('requests.post')
 def test_summarize_text_api_error(mock_post):
@@ -108,7 +110,48 @@ def test_summarize_text_custom_model(mock_post):
     assert summary == "This is a mock AI summary."
     mock_post.assert_called_once()
     args, kwargs = mock_post.call_args
-    assert kwargs['json']['model'] == custom_model_name
+    import json
+    sent_data = json.loads(kwargs['data'])
+    assert sent_data['model'] == custom_model_name
+
+@patch('requests.post')
+def test_summarize_text_custom_prompt(mock_post):
+    """Test successful text summarization with a custom prompt."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = MOCK_OLLAMA_SUCCESS_RESPONSE
+    mock_post.return_value = mock_response
+
+    custom_prompt = "Please ELI5 this: {text}"
+    article_text = "A complex article about quantum mechanics."
+    summary = summarize_text(article_text, prompt=custom_prompt)
+
+    assert summary == "This is a mock AI summary."
+    mock_post.assert_called_once()
+    args, kwargs = mock_post.call_args
+    import json
+    sent_data = json.loads(kwargs['data'])
+    assert sent_data['prompt'] == f"Please ELI5 this: {article_text}"
+
+@patch('requests.get')
+def test_get_available_models_success(mock_get):
+    """Test successful fetching of available models."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"models": [{"name": "model1:latest"}, {"name": "model2:latest"}]}
+    mock_get.return_value = mock_response
+
+    models = get_available_models()
+    assert models == ["model1:latest", "model2:latest"]
+    mock_get.assert_called_once()
+
+@patch('requests.get')
+def test_get_available_models_api_error(mock_get):
+    """Test fetching models when the API returns an error."""
+    mock_get.side_effect = requests.exceptions.RequestException("API Error")
+    models = get_available_models()
+    assert models == []
+    mock_get.assert_called_once()
 
 @patch('requests.post')
 def test_summarize_text_json_decode_error(mock_post):
@@ -125,4 +168,3 @@ def test_summarize_text_json_decode_error(mock_post):
 
 # To run these tests, navigate to the project root and run:
 # python -m pytest
-```

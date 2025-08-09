@@ -55,5 +55,3 @@ if __name__ == '__main__':
             print(f"Summary: {article['summary'][:200]}...") # Print first 200 chars of summary
     else:
         print("No articles fetched. Check URLs or network connection.")
-
-```

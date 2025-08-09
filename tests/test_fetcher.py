@@ -1,6 +1,7 @@
 import pytest
 from news_fetcher.fetcher import fetch_news_from_rss
 from unittest.mock import patch, MagicMock
+import types
 
 # A sample feed entry structure that feedparser might return
 SAMPLE_FEED_ENTRY = {
@@ -8,22 +9,21 @@ SAMPLE_FEED_ENTRY = {
     'link': 'http://example.com/test',
     'summary': 'Test summary.',
     'published': 'Tue, 23 Jul 2024 10:00:00 +0000',
-    'source_url': 'http://example.com/rss'
 }
 
-SAMPLE_PARSED_FEED = {
-    'bozo': 0, # 0 means not malformed
-    'entries': [SAMPLE_FEED_ENTRY],
-    'feed': {},
-    'headers': {}
-}
+SAMPLE_PARSED_FEED = types.SimpleNamespace(
+    bozo=0,
+    entries=[SAMPLE_FEED_ENTRY],
+    feed=types.SimpleNamespace(),
+    headers={}
+)
 
-MALFORMED_PARSED_FEED = {
-    'bozo': 1, # 1 means malformed
-    'entries': [], # Typically no entries if feed is malformed
-    'feed': {},
-    'headers': {}
-}
+MALFORMED_PARSED_FEED = types.SimpleNamespace(
+    bozo=1,
+    entries=[],
+    feed=types.SimpleNamespace(),
+    headers={}
+)
 
 def test_fetch_news_empty_list():
     """Test fetching news with an empty list of RSS feeds."""
@@ -96,11 +96,11 @@ def test_fetch_news_entry_missing_fields(mock_parse):
         # 'summary' is missing
         # 'published' is missing
     }
-    parsed_feed_incomplete = {
-        'entries': [incomplete_entry],
-        'feed': {},
-        'headers': {}
-    }
+    parsed_feed_incomplete = types.SimpleNamespace(
+        entries=[incomplete_entry],
+        feed=types.SimpleNamespace(),
+        headers={}
+    )
     mock_parse.return_value = parsed_feed_incomplete
 
     articles = fetch_news_from_rss(["http://incomplete.example.com/rss"])
@@ -113,4 +113,3 @@ def test_fetch_news_entry_missing_fields(mock_parse):
 
 # To run these tests, navigate to the project root and run:
 # python -m pytest
-```
